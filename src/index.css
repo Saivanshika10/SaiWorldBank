@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1a365d;
+  --color-secondary: #2b6cb0;
+  --color-accent: #f6ad55;
+  --color-success: #38a169;
+  --color-bank-bg: #f7fafc;
+  --color-text-dark: #2d3748;
+  --color-text-muted: #718096;
+  --color-bank-border: #e2e8f0;
+
+  --font-sans: 'Helvetica Neue', Arial, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-bank-bg);
+    color: var(--color-text-dark);
+  }
+}
+
+@layer components {
+  .bank-card {
+    @apply bg-white border border-bank-border rounded-lg shadow-sm;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .stat-label {
+    @apply text-[12px] uppercase font-semibold text-text-muted mb-2 tracking-wider;
+  }
+
+  .stat-value {
+    @apply text-2xl font-bold text-primary;
+  }
+
+  .bank-table-header {
+    @apply bg-slate-50 border-b border-bank-border px-5 py-3 text-[12px] uppercase font-semibold text-text-muted text-left;
+  }
+
+  .bank-btn-primary {
+    @apply bg-secondary text-white font-semibold rounded px-4 py-2 text-sm transition-opacity hover:opacity-90;
+  }
+
+  .pill {
+    @apply px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider;
+  }
+
+  .pill-savings {
+    @apply bg-[#e6fffa] text-[#2c7a7b];
+  }
+
+  .pill-current {
+    @apply bg-[#ebf8ff] text-[#2b6cb0];
+  }
+}
