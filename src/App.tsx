@@ -1,11 +1,13 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Layout from './components/Layout';
-import Home from './pages/Home';
-import OpenAccount from './pages/OpenAccount';
-import AccountList from './pages/AccountList';
-import AccountDetails from './pages/AccountDetails';
-import TransactionPage from './pages/TransactionPage';
-import TransactionHistory from './pages/TransactionHistory';
+
+import Layout from "./components/Layout";
+
+import Home from './components/pages/Home';
+import OpenAccount from './components/pages/OpenAccount';
+import AccountList from './components/pages/AccountList';
+import AccountDetails from './components/pages/AccountDetails';
+import TransactionPage from './components/pages/TransactionPage';
+import TransactionHistory from './components/pages/TransactionHistory';
 
 export default function App() {
   return (
