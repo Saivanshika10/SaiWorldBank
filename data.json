@@ -1,1 +1,8 @@
-
+{
+  "accounts": [
+    {
+      "accountNumber": "SWB...",
+      "fullName": "..."
+    }
+  ]
+}
