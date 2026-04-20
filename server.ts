@@ -1,23 +1,29 @@
-import cors from "cors";
 import express from "express";
-import { createServer as createViteServer } from "vite";
-import path from "path";
-import { fileURLToPath } from "url";
-import { Account, Transaction, BankStats } from "./src/types";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import cors from "cors";
+import { Account, Transaction } from "./src/types";
 
 async function startServer() {
   const app = express();
 
-app.use(cors()); 
-app.use(express.json());
+  // ✅ FORCE CORS (no more errors)
+  app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+    res.header("Access-Control-Allow-Headers", "Content-Type");
+    next();
+  });
+
+  app.use(cors());
+  app.use(express.json());
+
   const PORT = process.env.PORT || 3000;
 
-  
+  // ✅ Test route (optional but useful)
+  app.get("/", (req, res) => {
+    res.send("Backend is running 🚀");
+  });
 
-  // In-memory "Database"
+  // In-memory Database
   let accounts: Account[] = [
     {
       accountNumber: "SWB20260419001",
@@ -61,20 +67,16 @@ app.use(express.json());
     }
   ];
 
-  // Helper to generate account numbers
   function generateAccountNumber() {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `SWB${timestamp}${random}`;
+    return `SWB${Date.now()}${Math.floor(Math.random() * 1000)}`;
   }
 
-  // Helper to generate transaction IDs
   function generateTransactionID() {
-    const timestamp = Date.now();
-    return `SWBTXN${timestamp}`;
+    return `SWBTXN${Date.now()}`;
   }
 
-  // API Routes
+  // ✅ API Routes
+
   app.get("/api/stats", (req, res) => {
     const totalCustomers = accounts.length;
     const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
@@ -93,11 +95,11 @@ app.use(express.json());
     }
 
     if (initialDeposit < 500) {
-      return res.status(400).json({ error: "Initial deposit must be at least ₹500" });
+      return res.status(400).json({ error: "Minimum ₹500 required" });
     }
 
     if (accounts.some(a => a.email === email)) {
-      return res.status(400).json({ error: "Email already registered" });
+      return res.status(400).json({ error: "Email already exists" });
     }
 
     const newAccount: Account = {
@@ -108,7 +110,7 @@ app.use(express.json());
       address,
       accountType,
       balance: initialDeposit,
-      openingDate: new Date().toISOString().split('T')[0],
+      openingDate: new Date().toISOString().split("T")[0],
       transactions: [
         {
           id: generateTransactionID(),
@@ -127,25 +129,21 @@ app.use(express.json());
 
   app.get("/api/accounts/:accountNumber", (req, res) => {
     const account = accounts.find(a => a.accountNumber === req.params.accountNumber);
-    if (!account) {
-      return res.status(404).json({ error: "Account not found" });
-    }
+    if (!account) return res.status(404).json({ error: "Not found" });
     res.json(account);
   });
 
   app.get("/api/transactions", (req, res) => {
-    // Collect all transactions from all accounts
-    const allTransactions = accounts.flatMap(acc => 
+    const allTransactions = accounts.flatMap(acc =>
       acc.transactions.map(txn => ({
         ...txn,
         accountNumber: acc.accountNumber,
         accountName: acc.fullName
       }))
     );
-    
-    // Sort by timestamp descending
+
     allTransactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    
+
     res.json(allTransactions);
   });
 
@@ -153,10 +151,11 @@ app.use(express.json());
     const { amount, description } = req.body;
     const account = accounts.find(a => a.accountNumber === req.params.accountNumber);
 
-    if (!account) return res.status(404).json({ error: "Account not found" });
-    if (amount <= 0) return res.status(400).json({ error: "Amount must be positive" });
+    if (!account) return res.status(404).json({ error: "Not found" });
+    if (amount <= 0) return res.status(400).json({ error: "Invalid amount" });
 
     account.balance += amount;
+
     const txn: Transaction = {
       id: generateTransactionID(),
       type: "DEPOSIT",
@@ -165,8 +164,8 @@ app.use(express.json());
       description: description || "Deposit",
       timestamp: new Date().toISOString()
     };
-    account.transactions.unshift(txn);
 
+    account.transactions.unshift(txn);
     res.json({ message: "Deposit successful", account });
   });
 
@@ -174,13 +173,15 @@ app.use(express.json());
     const { amount, description } = req.body;
     const account = accounts.find(a => a.accountNumber === req.params.accountNumber);
 
-    if (!account) return res.status(404).json({ error: "Account not found" });
-    if (amount <= 0) return res.status(400).json({ error: "Amount must be positive" });
+    if (!account) return res.status(404).json({ error: "Not found" });
+    if (amount <= 0) return res.status(400).json({ error: "Invalid amount" });
+
     if (account.balance - amount < 100) {
-      return res.status(400).json({ error: "Insufficient balance. Minimum balance of ₹100 required after withdrawal." });
+      return res.status(400).json({ error: "Minimum ₹100 balance required" });
     }
 
     account.balance -= amount;
+
     const txn: Transaction = {
       id: generateTransactionID(),
       type: "WITHDRAWAL",
@@ -189,14 +190,12 @@ app.use(express.json());
       description: description || "Withdrawal",
       timestamp: new Date().toISOString()
     };
-    account.transactions.unshift(txn);
 
+    account.transactions.unshift(txn);
     res.json({ message: "Withdrawal successful", account });
   });
 
-
-
-  app.listen(PORT, "0.0.0.0", () => {
+  app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }
