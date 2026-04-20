@@ -1,16 +1,26 @@
 const BASE_URL = "http://localhost:3000/api";
 
-export async function getStats() {
-  const res = await fetch(`${BASE_URL}/stats`);
-  return res.json();
+async function fetchData(url: string) {
+  const res = await fetch(url);
+
+  const text = await res.text(); // 👈 important
+
+  try {
+    return JSON.parse(text); // try parsing JSON
+  } catch {
+    console.error("Not JSON response:", text); // 👈 will show actual problem
+    throw new Error("Invalid JSON response");
+  }
 }
 
-export async function getAccounts() {
-  const res = await fetch(`${BASE_URL}/accounts`);
-  return res.json();
+export function getStats() {
+  return fetchData(`${BASE_URL}/stats`);
 }
 
-export async function getTransactions() {
-  const res = await fetch(`${BASE_URL}/transactions`);
-  return res.json();
+export function getAccounts() {
+  return fetchData(`${BASE_URL}/accounts`);
+}
+
+export function getTransactions() {
+  return fetchData(`${BASE_URL}/transactions`);
 }
