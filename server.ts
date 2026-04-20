@@ -1,72 +1,43 @@
-import express from "express";
 import cors from "cors";
+import express from "express";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { Account, Transaction } from "./src/types";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const DATA_FILE = path.join(__dirname, "data.json");
 
 async function startServer() {
   const app = express();
-
-  // ✅ FORCE CORS (no more errors)
-  app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-    res.header("Access-Control-Allow-Headers", "Content-Type");
-    next();
-  });
 
   app.use(cors());
   app.use(express.json());
 
   const PORT = process.env.PORT || 3000;
 
-  // ✅ Test route (optional but useful)
-  app.get("/", (req, res) => {
-    res.send("Backend is running 🚀");
-  });
-
-  // In-memory Database
-  let accounts: Account[] = [
-    {
-      accountNumber: "SWB20260419001",
-      fullName: "Sai Kiran",
-      email: "kiran@swb.com",
-      phone: "+91 9876543210",
-      address: "Hyderabad, India",
-      accountType: "Savings",
-      balance: 10000.0,
-      openingDate: "2026-04-10",
-      transactions: [
-        {
-          id: "SWBTXN20260410001",
-          type: "DEPOSIT",
-          amount: 10000.0,
-          balanceAfter: 10000.0,
-          description: "Initial Deposit",
-          timestamp: "2026-04-10T10:00:00Z"
-        }
-      ]
-    },
-    {
-      accountNumber: "SWB20260419002",
-      fullName: "Vanshika Sharma",
-      email: "vanshika@swb.com",
-      phone: "+91 8765432109",
-      address: "Mumbai, India",
-      accountType: "Current",
-      balance: 50000.0,
-      openingDate: "2026-04-12",
-      transactions: [
-        {
-          id: "SWBTXN20260412001",
-          type: "DEPOSIT",
-          amount: 50000.0,
-          balanceAfter: 50000.0,
-          description: "Opening Deposit",
-          timestamp: "2026-04-12T14:30:00Z"
-        }
-      ]
+  // =========================
+  // FILE STORAGE FUNCTIONS
+  // =========================
+  function loadData(): Account[] {
+    if (!fs.existsSync(DATA_FILE)) {
+      fs.writeFileSync(DATA_FILE, JSON.stringify({ accounts: [] }, null, 2));
     }
-  ];
+    const raw = fs.readFileSync(DATA_FILE, "utf-8");
+    return JSON.parse(raw).accounts;
+  }
 
+  function saveData(accounts: Account[]) {
+    fs.writeFileSync(DATA_FILE, JSON.stringify({ accounts }, null, 2));
+  }
+
+  let accounts: Account[] = loadData();
+
+  // =========================
+  // HELPERS
+  // =========================
   function generateAccountNumber() {
     return `SWB${Date.now()}${Math.floor(Math.random() * 1000)}`;
   }
@@ -75,18 +46,23 @@ async function startServer() {
     return `SWBTXN${Date.now()}`;
   }
 
-  // ✅ API Routes
+  // =========================
+  // ROUTES
+  // =========================
 
+  // Stats
   app.get("/api/stats", (req, res) => {
     const totalCustomers = accounts.length;
     const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
     res.json({ totalCustomers, totalBalance });
   });
 
+  // Get all accounts
   app.get("/api/accounts", (req, res) => {
     res.json(accounts);
   });
 
+  // Create account
   app.post("/api/accounts", (req, res) => {
     const { fullName, email, phone, address, accountType, initialDeposit } = req.body;
 
@@ -96,10 +72,6 @@ async function startServer() {
 
     if (initialDeposit < 500) {
       return res.status(400).json({ error: "Minimum ₹500 required" });
-    }
-
-    if (accounts.some(a => a.email === email)) {
-      return res.status(400).json({ error: "Email already exists" });
     }
 
     const newAccount: Account = {
@@ -118,27 +90,31 @@ async function startServer() {
           amount: initialDeposit,
           balanceAfter: initialDeposit,
           description: "Initial Deposit",
-          timestamp: new Date().toISOString()
-        }
-      ]
+          timestamp: new Date().toISOString(),
+        },
+      ],
     };
 
     accounts.push(newAccount);
+    saveData(accounts);
+
     res.status(201).json(newAccount);
   });
 
+  // Get single account
   app.get("/api/accounts/:accountNumber", (req, res) => {
     const account = accounts.find(a => a.accountNumber === req.params.accountNumber);
     if (!account) return res.status(404).json({ error: "Not found" });
     res.json(account);
   });
 
+  // Transactions
   app.get("/api/transactions", (req, res) => {
     const allTransactions = accounts.flatMap(acc =>
       acc.transactions.map(txn => ({
         ...txn,
         accountNumber: acc.accountNumber,
-        accountName: acc.fullName
+        accountName: acc.fullName,
       }))
     );
 
@@ -147,12 +123,12 @@ async function startServer() {
     res.json(allTransactions);
   });
 
+  // Deposit
   app.post("/api/accounts/:accountNumber/deposit", (req, res) => {
-    const { amount, description } = req.body;
+    const { amount } = req.body;
     const account = accounts.find(a => a.accountNumber === req.params.accountNumber);
 
-    if (!account) return res.status(404).json({ error: "Not found" });
-    if (amount <= 0) return res.status(400).json({ error: "Invalid amount" });
+    if (!account) return res.status(404).json({ error: "Account not found" });
 
     account.balance += amount;
 
@@ -161,20 +137,22 @@ async function startServer() {
       type: "DEPOSIT",
       amount,
       balanceAfter: account.balance,
-      description: description || "Deposit",
-      timestamp: new Date().toISOString()
+      description: "Deposit",
+      timestamp: new Date().toISOString(),
     };
 
     account.transactions.unshift(txn);
-    res.json({ message: "Deposit successful", account });
+    saveData(accounts);
+
+    res.json(account);
   });
 
+  // Withdraw
   app.post("/api/accounts/:accountNumber/withdraw", (req, res) => {
-    const { amount, description } = req.body;
+    const { amount } = req.body;
     const account = accounts.find(a => a.accountNumber === req.params.accountNumber);
 
-    if (!account) return res.status(404).json({ error: "Not found" });
-    if (amount <= 0) return res.status(400).json({ error: "Invalid amount" });
+    if (!account) return res.status(404).json({ error: "Account not found" });
 
     if (account.balance - amount < 100) {
       return res.status(400).json({ error: "Minimum ₹100 balance required" });
@@ -187,13 +165,17 @@ async function startServer() {
       type: "WITHDRAWAL",
       amount,
       balanceAfter: account.balance,
-      description: description || "Withdrawal",
-      timestamp: new Date().toISOString()
+      description: "Withdrawal",
+      timestamp: new Date().toISOString(),
     };
 
     account.transactions.unshift(txn);
-    res.json({ message: "Withdrawal successful", account });
+    saveData(accounts);
+
+    res.json(account);
   });
+
+  // =========================
 
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
