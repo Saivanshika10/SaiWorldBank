@@ -1,6 +1,7 @@
 const BASE_URL =
-  (import.meta as any).env?.VITE_API_URL ||
-  "https://saiworldbank.onrender.com/api";
+  (import.meta as any).env?.VITE_API_URL || "/api";
+
+// ==========================
 
 export async function getStats() {
   const res = await fetch(`${BASE_URL}/stats`);
