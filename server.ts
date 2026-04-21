@@ -28,8 +28,11 @@ type Account = {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ safer path (Render friendly)
+// ✅ data file path
 const DATA_FILE = path.resolve(__dirname, "data.json");
+
+// ✅ frontend build path
+const FRONTEND_PATH = path.join(__dirname, "dist");
 
 const app = express();
 app.use(cors());
@@ -49,18 +52,13 @@ function loadData(): Account[] {
 
     const raw = fs.readFileSync(DATA_FILE, "utf-8");
     return JSON.parse(raw).accounts || [];
-  } catch (err) {
-    console.log("Error reading file:", err);
+  } catch {
     return [];
   }
 }
 
 function saveData(accounts: Account[]) {
-  try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify({ accounts }, null, 2));
-  } catch (err) {
-    console.log("Error writing file:", err);
-  }
+  fs.writeFileSync(DATA_FILE, JSON.stringify({ accounts }, null, 2));
 }
 
 let accounts: Account[] = loadData();
@@ -76,7 +74,7 @@ const generateTransactionID = () =>
   `SWBTXN${Date.now()}${Math.floor(Math.random() * 100)}`;
 
 // =========================
-// ROUTES
+// API ROUTES
 // =========================
 
 app.get("/api/stats", (req, res) => {
@@ -155,60 +153,18 @@ app.get("/api/transactions", (req, res) => {
   res.json(all);
 });
 
-app.post("/api/accounts/:accountNumber/deposit", (req, res) => {
-  const { amount } = req.body;
+// =========================
+// 🔥 SERVE FRONTEND
+// =========================
 
-  const account = accounts.find(
-    a => a.accountNumber === req.params.accountNumber
-  );
+app.use(express.static(FRONTEND_PATH));
 
-  if (!account) return res.status(404).json({ error: "Not found" });
-
-  account.balance += Number(amount);
-
-  account.transactions.unshift({
-    id: generateTransactionID(),
-    type: "DEPOSIT",
-    amount,
-    balanceAfter: account.balance,
-    description: "Deposit",
-    timestamp: new Date().toISOString(),
-  });
-
-  saveData(accounts);
-  res.json(account);
-});
-
-app.post("/api/accounts/:accountNumber/withdraw", (req, res) => {
-  const { amount } = req.body;
-
-  const account = accounts.find(
-    a => a.accountNumber === req.params.accountNumber
-  );
-
-  if (!account) return res.status(404).json({ error: "Not found" });
-
-  if (account.balance - amount < 100) {
-    return res.status(400).json({ error: "Min ₹100 balance required" });
-  }
-
-  account.balance -= Number(amount);
-
-  account.transactions.unshift({
-    id: generateTransactionID(),
-    type: "WITHDRAWAL",
-    amount,
-    balanceAfter: account.balance,
-    description: "Withdrawal",
-    timestamp: new Date().toISOString(),
-  });
-
-  saveData(accounts);
-  res.json(account);
+app.get("*", (req, res) => {
+  res.sendFile(path.join(FRONTEND_PATH, "index.html"));
 });
 
 // =========================
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
