@@ -11,7 +11,7 @@ import {
   AlertCircle,
   Landmark
 } from 'lucide-react';
-import { Account } from '../types';
+import { Account } from '../../types';
 
 export default function TransactionPage({ mode }: { mode: 'DEPOSIT' | 'WITHDRAW' }) {
   const [searchParams] = useSearchParams();
