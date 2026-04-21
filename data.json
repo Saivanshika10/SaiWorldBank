@@ -1,25 +1,25 @@
 {
   "accounts": [
     {
-      "accountNumber": "SWB1776714298969188",
+      "accountNumber": "SWB1001",
       "fullName": "Sai Gupta",
       "email": "sai123@gmail.com",
       "phone": "789456123",
-      "address": "24B, abc street, Pune",
+      "address": "24B, ABC Street, Pune",
       "accountType": "Savings",
       "balance": 8936800,
       "openingDate": "2026-04-20",
       "transactions": [
         {
-          "id": "SWBTXN1776714500348",
+          "id": "TXN1001",
           "type": "WITHDRAWAL",
           "amount": 63200,
           "balanceAfter": 8936800,
-          "description": "Withdrawal",
+          "description": "ATM Withdrawal",
           "timestamp": "2026-04-20T19:48:20.348Z"
         },
         {
-          "id": "SWBTXN1776714298969",
+          "id": "TXN1000",
           "type": "DEPOSIT",
           "amount": 9000000,
           "balanceAfter": 9000000,
@@ -29,25 +29,25 @@
       ]
     },
     {
-      "accountNumber": "SWB1776714366591535",
+      "accountNumber": "SWB1002",
       "fullName": "Rahul Shinde",
       "email": "rahul098@yahoo.com",
       "phone": "123789456",
-      "address": "90A, Hadapsar, Mumbai",
+      "address": "90A, Hadapsar, Pune",
       "accountType": "Current",
       "balance": 1050222,
       "openingDate": "2026-04-20",
       "transactions": [
         {
-          "id": "SWBTXN1776714437512",
+          "id": "TXN2001",
           "type": "DEPOSIT",
           "amount": 650222,
           "balanceAfter": 1050222,
-          "description": "Deposit",
+          "description": "Cash Deposit",
           "timestamp": "2026-04-20T19:47:17.512Z"
         },
         {
-          "id": "SWBTXN1776714366591",
+          "id": "TXN2000",
           "type": "DEPOSIT",
           "amount": 400000,
           "balanceAfter": 400000,
@@ -57,25 +57,25 @@
       ]
     },
     {
-      "accountNumber": "SWB1776715029666142",
-      "fullName": "pc ",
+      "accountNumber": "SWB1003",
+      "fullName": "Priya Chavan",
       "email": "pc123@gmail.com",
       "phone": "123456789",
-      "address": "H 4 , Pune maharashtra ",
+      "address": "H4, Pune, Maharashtra",
       "accountType": "Savings",
       "balance": 6400000,
       "openingDate": "2026-04-20",
       "transactions": [
         {
-          "id": "SWBTXN1776715182833",
+          "id": "TXN3002",
           "type": "WITHDRAWAL",
           "amount": 100000,
           "balanceAfter": 6400000,
-          "description": "Withdrawal",
+          "description": "Online Transfer",
           "timestamp": "2026-04-20T19:59:42.833Z"
         },
         {
-          "id": "SWBTXN1776715135089",
+          "id": "TXN3001",
           "type": "DEPOSIT",
           "amount": 6000000,
           "balanceAfter": 6500000,
@@ -83,7 +83,7 @@
           "timestamp": "2026-04-20T19:58:55.089Z"
         },
         {
-          "id": "SWBTXN1776715029666",
+          "id": "TXN3000",
           "type": "DEPOSIT",
           "amount": 500000,
           "balanceAfter": 500000,
