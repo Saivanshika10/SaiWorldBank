@@ -28,11 +28,7 @@ type Account = {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ data file path
 const DATA_FILE = path.resolve(__dirname, "data.json");
-
-// ✅ frontend build path
-const FRONTEND_PATH = path.join(__dirname, "dist");
 
 const app = express();
 app.use(cors());
@@ -41,7 +37,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 // =========================
-// FILE HELPERS
+// FILE HANDLING
 // =========================
 
 function loadData(): Account[] {
@@ -78,9 +74,10 @@ const generateTransactionID = () =>
 // =========================
 
 app.get("/api/stats", (req, res) => {
-  const totalCustomers = accounts.length;
-  const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
-  res.json({ totalCustomers, totalBalance });
+  res.json({
+    totalCustomers: accounts.length,
+    totalBalance: accounts.reduce((sum, a) => sum + a.balance, 0),
+  });
 });
 
 app.get("/api/accounts", (req, res) => {
@@ -126,12 +123,8 @@ app.post("/api/accounts", (req, res) => {
 });
 
 app.get("/api/accounts/:accountNumber", (req, res) => {
-  const account = accounts.find(
-    a => a.accountNumber === req.params.accountNumber
-  );
-
+  const account = accounts.find(a => a.accountNumber === req.params.accountNumber);
   if (!account) return res.status(404).json({ error: "Not found" });
-
   res.json(account);
 });
 
@@ -144,10 +137,8 @@ app.get("/api/transactions", (req, res) => {
     }))
   );
 
-  all.sort(
-    (a, b) =>
-      new Date(b.timestamp).getTime() -
-      new Date(a.timestamp).getTime()
+  all.sort((a, b) =>
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 
   res.json(all);
@@ -157,11 +148,15 @@ app.get("/api/transactions", (req, res) => {
 // 🔥 SERVE FRONTEND
 // =========================
 
-app.use(express.static(FRONTEND_PATH));
+const distPath = path.join(__dirname, "dist");
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(FRONTEND_PATH, "index.html"));
-});
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+}
 
 // =========================
 
