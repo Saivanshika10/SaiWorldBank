@@ -28,7 +28,8 @@ type Account = {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DATA_FILE = path.resolve(__dirname, "data.json");
+// 🔥 IMPORTANT: absolute path (Render safe)
+const DATA_FILE = path.join(__dirname, "data.json");
 
 const app = express();
 app.use(cors());
@@ -48,13 +49,18 @@ function loadData(): Account[] {
 
     const raw = fs.readFileSync(DATA_FILE, "utf-8");
     return JSON.parse(raw).accounts || [];
-  } catch {
+  } catch (err) {
+    console.log("Error reading data:", err);
     return [];
   }
 }
 
 function saveData(accounts: Account[]) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify({ accounts }, null, 2));
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify({ accounts }, null, 2));
+  } catch (err) {
+    console.log("Error saving data:", err);
+  }
 }
 
 let accounts: Account[] = loadData();
@@ -73,6 +79,7 @@ const generateTransactionID = () =>
 // API ROUTES
 // =========================
 
+// Stats
 app.get("/api/stats", (req, res) => {
   res.json({
     totalCustomers: accounts.length,
@@ -80,10 +87,12 @@ app.get("/api/stats", (req, res) => {
   });
 });
 
+// All accounts
 app.get("/api/accounts", (req, res) => {
   res.json(accounts);
 });
 
+// Create account
 app.post("/api/accounts", (req, res) => {
   const { fullName, email, phone, address, accountType, initialDeposit } = req.body;
 
@@ -91,7 +100,7 @@ app.post("/api/accounts", (req, res) => {
     return res.status(400).json({ error: "All fields required" });
   }
 
-  if (initialDeposit < 500) {
+  if (Number(initialDeposit) < 500) {
     return res.status(400).json({ error: "Minimum ₹500 required" });
   }
 
@@ -102,14 +111,14 @@ app.post("/api/accounts", (req, res) => {
     phone,
     address,
     accountType,
-    balance: initialDeposit,
+    balance: Number(initialDeposit),
     openingDate: new Date().toISOString().split("T")[0],
     transactions: [
       {
         id: generateTransactionID(),
         type: "DEPOSIT",
-        amount: initialDeposit,
-        balanceAfter: initialDeposit,
+        amount: Number(initialDeposit),
+        balanceAfter: Number(initialDeposit),
         description: "Initial Deposit",
         timestamp: new Date().toISOString(),
       },
@@ -122,30 +131,92 @@ app.post("/api/accounts", (req, res) => {
   res.status(201).json(newAccount);
 });
 
+// Single account
 app.get("/api/accounts/:accountNumber", (req, res) => {
-  const account = accounts.find(a => a.accountNumber === req.params.accountNumber);
+  const account = accounts.find(
+    (a) => a.accountNumber === req.params.accountNumber
+  );
+
   if (!account) return res.status(404).json({ error: "Not found" });
+
   res.json(account);
 });
 
+// All transactions
 app.get("/api/transactions", (req, res) => {
-  const all = accounts.flatMap(acc =>
-    acc.transactions.map(txn => ({
+  const all = accounts.flatMap((acc) =>
+    acc.transactions.map((txn) => ({
       ...txn,
       accountNumber: acc.accountNumber,
       accountName: acc.fullName,
     }))
   );
 
-  all.sort((a, b) =>
-    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  all.sort(
+    (a, b) =>
+      new Date(b.timestamp).getTime() -
+      new Date(a.timestamp).getTime()
   );
 
   res.json(all);
 });
 
+// Deposit
+app.post("/api/accounts/:accountNumber/deposit", (req, res) => {
+  const { amount } = req.body;
+
+  const account = accounts.find(
+    (a) => a.accountNumber === req.params.accountNumber
+  );
+
+  if (!account) return res.status(404).json({ error: "Not found" });
+
+  account.balance += Number(amount);
+
+  account.transactions.unshift({
+    id: generateTransactionID(),
+    type: "DEPOSIT",
+    amount: Number(amount),
+    balanceAfter: account.balance,
+    description: "Deposit",
+    timestamp: new Date().toISOString(),
+  });
+
+  saveData(accounts);
+  res.json(account);
+});
+
+// Withdraw
+app.post("/api/accounts/:accountNumber/withdraw", (req, res) => {
+  const { amount } = req.body;
+
+  const account = accounts.find(
+    (a) => a.accountNumber === req.params.accountNumber
+  );
+
+  if (!account) return res.status(404).json({ error: "Not found" });
+
+  if (account.balance - Number(amount) < 100) {
+    return res.status(400).json({ error: "Minimum ₹100 balance required" });
+  }
+
+  account.balance -= Number(amount);
+
+  account.transactions.unshift({
+    id: generateTransactionID(),
+    type: "WITHDRAWAL",
+    amount: Number(amount),
+    balanceAfter: account.balance,
+    description: "Withdrawal",
+    timestamp: new Date().toISOString(),
+  });
+
+  saveData(accounts);
+  res.json(account);
+});
+
 // =========================
-// 🔥 SERVE FRONTEND
+// 🔥 SERVE FRONTEND (IMPORTANT)
 // =========================
 
 const distPath = path.join(__dirname, "dist");
