@@ -1,24 +1,18 @@
 const BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  (import.meta as any).env?.VITE_API_URL ||
+  "https://saiworldbank.onrender.com/api";
 
-async function safeFetch(url: string) {
-  const res = await fetch(url);
-
-  if (!res.ok) {
-    throw new Error(`API Error: ${res.status}`);
-  }
-
+export async function getStats() {
+  const res = await fetch(`${BASE_URL}/stats`);
   return res.json();
 }
 
-export async function getStats() {
-  return safeFetch(`${BASE_URL}/stats`);
-}
-
 export async function getAccounts() {
-  return safeFetch(`${BASE_URL}/accounts`);
+  const res = await fetch(`${BASE_URL}/accounts`);
+  return res.json();
 }
 
 export async function getTransactions() {
-  return safeFetch(`${BASE_URL}/transactions`);
+  const res = await fetch(`${BASE_URL}/transactions`);
+  return res.json();
 }
