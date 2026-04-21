@@ -28,8 +28,7 @@ type Account = {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 🔥 IMPORTANT: absolute path (Render safe)
-const DATA_FILE = path.join(__dirname, "data.json");
+const DATA_FILE = path.resolve(__dirname, "data.json");
 
 const app = express();
 app.use(cors());
@@ -38,32 +37,25 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 // =========================
-// FILE HANDLING
+// FILE FUNCTIONS
 // =========================
 
 function loadData(): Account[] {
-  try {
-    if (!fs.existsSync(DATA_FILE)) {
-      fs.writeFileSync(DATA_FILE, JSON.stringify({ accounts: [] }, null, 2));
-    }
-
-    const raw = fs.readFileSync(DATA_FILE, "utf-8");
-    return JSON.parse(raw).accounts || [];
-  } catch (err) {
-    console.log("Error reading data:", err);
-    return [];
+  if (!fs.existsSync(DATA_FILE)) {
+    fs.writeFileSync(DATA_FILE, JSON.stringify({ accounts: [] }, null, 2));
   }
+
+  const raw = fs.readFileSync(DATA_FILE, "utf-8");
+  return JSON.parse(raw).accounts || [];
 }
 
 function saveData(accounts: Account[]) {
-  try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify({ accounts }, null, 2));
-  } catch (err) {
-    console.log("Error saving data:", err);
-  }
+  fs.writeFileSync(DATA_FILE, JSON.stringify({ accounts }, null, 2));
 }
 
-let accounts: Account[] = loadData();
+function getAccounts(): Account[] {
+  return loadData(); // 🔥 ALWAYS fresh data
+}
 
 // =========================
 // HELPERS
@@ -73,34 +65,35 @@ const generateAccountNumber = () =>
   `SWB${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
 const generateTransactionID = () =>
-  `SWBTXN${Date.now()}${Math.floor(Math.random() * 100)}`;
+  `TXN${Date.now()}${Math.floor(Math.random() * 100)}`;
 
 // =========================
 // API ROUTES
 // =========================
 
-// Stats
 app.get("/api/stats", (req, res) => {
+  const accounts = getAccounts();
+
   res.json({
     totalCustomers: accounts.length,
     totalBalance: accounts.reduce((sum, a) => sum + a.balance, 0),
   });
 });
 
-// All accounts
 app.get("/api/accounts", (req, res) => {
-  res.json(accounts);
+  res.json(getAccounts());
 });
 
-// Create account
 app.post("/api/accounts", (req, res) => {
+  const accounts = getAccounts();
+
   const { fullName, email, phone, address, accountType, initialDeposit } = req.body;
 
   if (!fullName || !email || !phone || !address || !accountType) {
     return res.status(400).json({ error: "All fields required" });
   }
 
-  if (Number(initialDeposit) < 500) {
+  if (initialDeposit < 500) {
     return res.status(400).json({ error: "Minimum ₹500 required" });
   }
 
@@ -111,14 +104,14 @@ app.post("/api/accounts", (req, res) => {
     phone,
     address,
     accountType,
-    balance: Number(initialDeposit),
+    balance: initialDeposit,
     openingDate: new Date().toISOString().split("T")[0],
     transactions: [
       {
         id: generateTransactionID(),
         type: "DEPOSIT",
-        amount: Number(initialDeposit),
-        balanceAfter: Number(initialDeposit),
+        amount: initialDeposit,
+        balanceAfter: initialDeposit,
         description: "Initial Deposit",
         timestamp: new Date().toISOString(),
       },
@@ -131,43 +124,39 @@ app.post("/api/accounts", (req, res) => {
   res.status(201).json(newAccount);
 });
 
-// Single account
 app.get("/api/accounts/:accountNumber", (req, res) => {
-  const account = accounts.find(
-    (a) => a.accountNumber === req.params.accountNumber
-  );
+  const accounts = getAccounts();
+
+  const account = accounts.find(a => a.accountNumber === req.params.accountNumber);
 
   if (!account) return res.status(404).json({ error: "Not found" });
 
   res.json(account);
 });
 
-// All transactions
 app.get("/api/transactions", (req, res) => {
-  const all = accounts.flatMap((acc) =>
-    acc.transactions.map((txn) => ({
+  const accounts = getAccounts();
+
+  const all = accounts.flatMap(acc =>
+    acc.transactions.map(txn => ({
       ...txn,
       accountNumber: acc.accountNumber,
       accountName: acc.fullName,
     }))
   );
 
-  all.sort(
-    (a, b) =>
-      new Date(b.timestamp).getTime() -
-      new Date(a.timestamp).getTime()
+  all.sort((a, b) =>
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 
   res.json(all);
 });
 
-// Deposit
 app.post("/api/accounts/:accountNumber/deposit", (req, res) => {
-  const { amount } = req.body;
+  const accounts = getAccounts();
 
-  const account = accounts.find(
-    (a) => a.accountNumber === req.params.accountNumber
-  );
+  const { amount } = req.body;
+  const account = accounts.find(a => a.accountNumber === req.params.accountNumber);
 
   if (!account) return res.status(404).json({ error: "Not found" });
 
@@ -176,7 +165,7 @@ app.post("/api/accounts/:accountNumber/deposit", (req, res) => {
   account.transactions.unshift({
     id: generateTransactionID(),
     type: "DEPOSIT",
-    amount: Number(amount),
+    amount,
     balanceAfter: account.balance,
     description: "Deposit",
     timestamp: new Date().toISOString(),
@@ -186,17 +175,15 @@ app.post("/api/accounts/:accountNumber/deposit", (req, res) => {
   res.json(account);
 });
 
-// Withdraw
 app.post("/api/accounts/:accountNumber/withdraw", (req, res) => {
-  const { amount } = req.body;
+  const accounts = getAccounts();
 
-  const account = accounts.find(
-    (a) => a.accountNumber === req.params.accountNumber
-  );
+  const { amount } = req.body;
+  const account = accounts.find(a => a.accountNumber === req.params.accountNumber);
 
   if (!account) return res.status(404).json({ error: "Not found" });
 
-  if (account.balance - Number(amount) < 100) {
+  if (account.balance - amount < 100) {
     return res.status(400).json({ error: "Minimum ₹100 balance required" });
   }
 
@@ -205,7 +192,7 @@ app.post("/api/accounts/:accountNumber/withdraw", (req, res) => {
   account.transactions.unshift({
     id: generateTransactionID(),
     type: "WITHDRAWAL",
-    amount: Number(amount),
+    amount,
     balanceAfter: account.balance,
     description: "Withdrawal",
     timestamp: new Date().toISOString(),
@@ -216,7 +203,7 @@ app.post("/api/accounts/:accountNumber/withdraw", (req, res) => {
 });
 
 // =========================
-// 🔥 SERVE FRONTEND (IMPORTANT)
+// SERVE FRONTEND
 // =========================
 
 const distPath = path.join(__dirname, "dist");
