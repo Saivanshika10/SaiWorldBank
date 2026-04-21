@@ -2,7 +2,7 @@ import { useEffect, useState, ReactNode } from 'react';
 import { motion } from 'motion/react';
 import { Landmark, Users, CreditCard, ShieldCheck, ArrowRight, TrendingUp, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { BankStats } from '../types';
+import { Account } from '../../types';
 import { getStats } from "../../api/api";
 
 export default function Home() {
