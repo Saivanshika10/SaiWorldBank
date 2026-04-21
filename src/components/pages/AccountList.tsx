@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Search, PlusCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Account } from '../types';
+import { Account } from '../../types';
 
 const BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3000/api";
