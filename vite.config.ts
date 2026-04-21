@@ -1,5 +1,5 @@
-import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 
@@ -15,20 +15,14 @@ export default defineConfig(({ mode }) => {
 
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, './src'),
       },
     },
 
     server: {
-      hmr: process.env.DISABLE_HMR !== 'true',
-
-      // ✅ THIS IS THE IMPORTANT PART
+      hmr: true,
       proxy: {
-        '/api': {
-          target: 'http://localhost:3000',
-          changeOrigin: true,
-          secure: false,
-        },
+        '/api': 'http://localhost:3000',
       },
     },
   };
