@@ -1,7 +1,5 @@
 const BASE_URL = "/api";
 
-// ==========================
-
 export async function getStats() {
   const res = await fetch(`${BASE_URL}/stats`);
   return res.json();
