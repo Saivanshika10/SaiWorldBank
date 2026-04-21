@@ -19,6 +19,12 @@ export default defineConfig(({ mode }) => {
       },
     },
 
+    // ✅ IMPORTANT FOR DEPLOYMENT
+    build: {
+      outDir: 'dist',
+    },
+
+    // ✅ ONLY FOR LOCAL DEV (SAFE TO KEEP)
     server: {
       hmr: true,
       proxy: {
