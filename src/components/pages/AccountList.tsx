@@ -3,9 +3,7 @@ import { motion } from 'motion/react';
 import { Search, PlusCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Account } from '../../types';
-
-const BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+import { getAccounts } from '../../api/api'; // ✅ IMPORTANT
 
 export default function AccountList() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -15,15 +13,8 @@ export default function AccountList() {
   useEffect(() => {
     async function fetchAccounts() {
       try {
-        const res = await fetch(`${BASE_URL}/accounts`);
-
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-
-        const data = await res.json();
+        const data = await getAccounts(); // ✅ FIXED
         console.log("Accounts:", data);
-
         setAccounts(data);
       } catch (err) {
         console.error("❌ Error fetching accounts:", err);
