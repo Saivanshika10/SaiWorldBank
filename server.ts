@@ -37,7 +37,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 // =========================
-// 🔥 MEMORY + FILE STORAGE FIX
+// 🔥 MEMORY + FILE FIX
 // =========================
 
 let memoryAccounts: Account[] = [];
@@ -50,20 +50,20 @@ function loadData(): Account[] {
       memoryAccounts = data;
       return data;
     }
-  } catch (err) {
-    console.log("File read error, using memory");
+  } catch {
+    console.log("Using memory fallback");
   }
 
   return memoryAccounts;
 }
 
 function saveData(accounts: Account[]) {
-  memoryAccounts = accounts; // 🔥 always keep memory updated
+  memoryAccounts = accounts;
 
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify({ accounts }, null, 2));
   } catch {
-    console.log("File write failed, using memory only");
+    console.log("File save failed (Render), using memory only");
   }
 }
 
@@ -219,18 +219,18 @@ app.post("/api/accounts/:accountNumber/withdraw", (req, res) => {
 });
 
 // =========================
-// SERVE FRONTEND (ONE URL)
+// 🔥 SERVE FRONTEND (FIXED)
 // =========================
 
 const distPath = path.join(__dirname, "dist");
 
-if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath));
+// serve static frontend files
+app.use(express.static(distPath));
 
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(distPath, "index.html"));
-  });
-}
+// 🔥 IMPORTANT: React Router fix
+app.get("*", (req, res) => {
+  res.sendFile(path.join(distPath, "index.html"));
+});
 
 // =========================
 
