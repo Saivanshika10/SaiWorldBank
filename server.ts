@@ -37,24 +37,38 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 // =========================
-// FILE FUNCTIONS
+// 🔥 MEMORY + FILE STORAGE FIX
 // =========================
 
+let memoryAccounts: Account[] = [];
+
 function loadData(): Account[] {
-  if (!fs.existsSync(DATA_FILE)) {
-    fs.writeFileSync(DATA_FILE, JSON.stringify({ accounts: [] }, null, 2));
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      const raw = fs.readFileSync(DATA_FILE, "utf-8");
+      const data = JSON.parse(raw).accounts || [];
+      memoryAccounts = data;
+      return data;
+    }
+  } catch (err) {
+    console.log("File read error, using memory");
   }
 
-  const raw = fs.readFileSync(DATA_FILE, "utf-8");
-  return JSON.parse(raw).accounts || [];
+  return memoryAccounts;
 }
 
 function saveData(accounts: Account[]) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify({ accounts }, null, 2));
+  memoryAccounts = accounts; // 🔥 always keep memory updated
+
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify({ accounts }, null, 2));
+  } catch {
+    console.log("File write failed, using memory only");
+  }
 }
 
 function getAccounts(): Account[] {
-  return loadData(); // 🔥 ALWAYS fresh data
+  return loadData();
 }
 
 // =========================
@@ -145,8 +159,10 @@ app.get("/api/transactions", (req, res) => {
     }))
   );
 
-  all.sort((a, b) =>
-    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  all.sort(
+    (a, b) =>
+      new Date(b.timestamp).getTime() -
+      new Date(a.timestamp).getTime()
   );
 
   res.json(all);
@@ -203,7 +219,7 @@ app.post("/api/accounts/:accountNumber/withdraw", (req, res) => {
 });
 
 // =========================
-// SERVE FRONTEND
+// SERVE FRONTEND (ONE URL)
 // =========================
 
 const distPath = path.join(__dirname, "dist");
