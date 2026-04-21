@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 
 import Layout from "./components/Layout";
 
@@ -21,7 +21,11 @@ export default function App() {
           <Route path="/transactions" element={<TransactionHistory />} />
           <Route path="/deposit" element={<TransactionPage mode="DEPOSIT" />} />
           <Route path="/withdraw" element={<TransactionPage mode="WITHDRAW" />} />
-          <Route path="*" element={<div className="text-center py-20 font-bold">404 - SAI WORLD BANK Page Not Found</div>} />
+          <Route path="*" element={
+            <div className="text-center py-20 font-bold">
+              404 - SAI WORLD BANK Page Not Found
+            </div>
+          } />
         </Routes>
       </Layout>
     </Router>
