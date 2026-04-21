@@ -15,7 +15,7 @@ import {
   Clock
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Account } from '../types';
+import { Account } from '../../types';
 
 export default function AccountDetails() {
   const { accountNumber } = useParams();
