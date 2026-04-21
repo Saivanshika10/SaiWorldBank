@@ -3,9 +3,7 @@ import { motion } from 'motion/react';
 import { Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-
-const BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+import { getTransactions } from '../../api/api'; // ✅ IMPORTANT
 
 interface GlobalTransaction {
   id: string;
@@ -26,17 +24,9 @@ export default function TransactionHistory() {
   useEffect(() => {
     async function fetchTransactions() {
       try {
-        const res = await fetch(`${BASE_URL}/transactions`);
-
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-
-        const data = await res.json();
+        const data = await getTransactions(); // ✅ FIXED
         console.log("Transactions:", data);
-
         setTransactions(data);
-
       } catch (err) {
         console.error("❌ Error fetching transactions:", err);
       } finally {
