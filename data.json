@@ -1,3 +1,96 @@
 {
-  "accounts": []
+  "accounts": [
+    {
+      "accountNumber": "SWB1776714298969188",
+      "fullName": "Sai Gupta",
+      "email": "sai123@gmail.com",
+      "phone": "789456123",
+      "address": "24B, abc street, Pune",
+      "accountType": "Savings",
+      "balance": 8936800,
+      "openingDate": "2026-04-20",
+      "transactions": [
+        {
+          "id": "SWBTXN1776714500348",
+          "type": "WITHDRAWAL",
+          "amount": 63200,
+          "balanceAfter": 8936800,
+          "description": "Withdrawal",
+          "timestamp": "2026-04-20T19:48:20.348Z"
+        },
+        {
+          "id": "SWBTXN1776714298969",
+          "type": "DEPOSIT",
+          "amount": 9000000,
+          "balanceAfter": 9000000,
+          "description": "Initial Deposit",
+          "timestamp": "2026-04-20T19:44:58.969Z"
+        }
+      ]
+    },
+    {
+      "accountNumber": "SWB1776714366591535",
+      "fullName": "Rahul Shinde",
+      "email": "rahul098@yahoo.com",
+      "phone": "123789456",
+      "address": "90A, Hadapsar, Mumbai",
+      "accountType": "Current",
+      "balance": 1050222,
+      "openingDate": "2026-04-20",
+      "transactions": [
+        {
+          "id": "SWBTXN1776714437512",
+          "type": "DEPOSIT",
+          "amount": 650222,
+          "balanceAfter": 1050222,
+          "description": "Deposit",
+          "timestamp": "2026-04-20T19:47:17.512Z"
+        },
+        {
+          "id": "SWBTXN1776714366591",
+          "type": "DEPOSIT",
+          "amount": 400000,
+          "balanceAfter": 400000,
+          "description": "Initial Deposit",
+          "timestamp": "2026-04-20T19:46:06.591Z"
+        }
+      ]
+    },
+    {
+      "accountNumber": "SWB1776715029666142",
+      "fullName": "pc ",
+      "email": "pc123@gmail.com",
+      "phone": "123456789",
+      "address": "H 4 , Pune maharashtra ",
+      "accountType": "Savings",
+      "balance": 6400000,
+      "openingDate": "2026-04-20",
+      "transactions": [
+        {
+          "id": "SWBTXN1776715182833",
+          "type": "WITHDRAWAL",
+          "amount": 100000,
+          "balanceAfter": 6400000,
+          "description": "Withdrawal",
+          "timestamp": "2026-04-20T19:59:42.833Z"
+        },
+        {
+          "id": "SWBTXN1776715135089",
+          "type": "DEPOSIT",
+          "amount": 6000000,
+          "balanceAfter": 6500000,
+          "description": "Deposit",
+          "timestamp": "2026-04-20T19:58:55.089Z"
+        },
+        {
+          "id": "SWBTXN1776715029666",
+          "type": "DEPOSIT",
+          "amount": 500000,
+          "balanceAfter": 500000,
+          "description": "Initial Deposit",
+          "timestamp": "2026-04-20T19:57:09.666Z"
+        }
+      ]
+    }
+  ]
 }
